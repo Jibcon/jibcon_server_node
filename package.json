@@ -1,0 +1,26 @@
+{
+  "name": "jibcon-server-node",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "async-waterfall": "^0.1.5",
+    "body-parser": "~1.17.1",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.3",
+    "express": "^4.15.4",
+    "jade": "~1.11.0",
+    "mongoose": "^4.11.7",
+    "morgan": "~1.8.1",
+    "serve-favicon": "~2.4.2"
+  },
+  "main": "app.js",
+  "devDependencies": {
+    "babel-cli": "^6.26.0"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

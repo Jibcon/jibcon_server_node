@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="64357ff0-0643-4a94-b0cd-e2c34aa91ad7" name="euijoon_aws" url="http://13.124.172.12">
+        <fileTransfer host="13.124.172.12" port="22" privateKey="C:\Users\admin\Desktop\dordods.pem" rootFolder="/home/ubuntu/workspace/jibcon_server_node" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
