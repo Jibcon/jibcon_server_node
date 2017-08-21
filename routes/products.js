@@ -22,15 +22,8 @@ router.post('/products', function (req, res) {
         if (err) {
             res.status(404);
         }
-
         company = _company;
 
-        // let product = new Product({
-        //         company_id: company.company_id,
-        //         product_id: req.body.product_id,
-        //         product_name: req.body.product_name,
-        //     }
-        // );
           let product = new Product({
                 company_id: company.company_id,
                 product_id: Product.id,
