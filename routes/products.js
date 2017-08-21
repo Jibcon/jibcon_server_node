@@ -46,15 +46,6 @@ router.post('/products', function (req, res) {
 
 });
 
-router.delete('/companies', (req, res) => {
-    Company.remove({company_id: req.body.company_id}, (err, output) => {
-        if (err) res.status(500);
-        else
-            res.status(200).json({
-                success: true
-            });
-    });
-});
 router.delete('/products', (req, res) => {
     Product.remove({product_id: req.body.product_id}, (err, output) => {
         if (err) res.status(500);
