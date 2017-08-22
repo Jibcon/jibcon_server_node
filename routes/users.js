@@ -14,7 +14,7 @@ router.get('/', function (req, res, next) {
 
 function facebookLogin(access_token, res) {
     var path = 'https://graph.facebook.com/me?access_token=' + access_token;
-    console.log(path);
+    //console.log('path : ', path);
     https.get(path, (response) => {
         response.on('data', (d) => {
             var json = JSON.parse(d);
@@ -32,19 +32,25 @@ function facebookLogin(access_token, res) {
                     https.get(path, (response) => {
                         response.on('data', (d) => {
                             var json = JSON.parse(d);
+                            var generated_token = rand_token.generate(48);
                             console.log('grap api data : ', json);
                             var newUser = new User({
                                 email: json.email,
                                 first_name: json.first_name,
                                 last_name: json.last_name,
                                 pic_url: json.picture.data.url,
-                                user_id: json.id,
-                                token: rand_token.generate(48)
+                                token: generated_token,
+                                user_id : json.id,
+                                userinfo: {
+                                    type : 'facebook',
+                                    full_name : json.first_name + json.last_name,
+                                    token : generated_token,
+                                    pic_url: json.picture.data.url
+                                },
                             });
 
                             console.log(json.picture.data.url);
                             newUser.save((err) => {
-                                console.log('saving error');
                                 if (err) res.status(500);
 
                             });
@@ -82,12 +88,11 @@ function samplelogin(access_token, res) {
     });
 }
 
-router.post('/social_login_or_signup', (req, res) => {
+router.post('/social_sign_up_or_in', (req, res) => {
     var access_token = req.body.token;
     var type = req.body.type;
-
-    console.log(access_token);
-    console.log(type);
+    console.log('token : ', access_token);
+    console.log('type : ', type);
 
     if (type == 'facebook') {
 
@@ -101,17 +106,24 @@ router.post('/social_login_or_signup', (req, res) => {
 });
 router.post('/samples/sign_up', function (req, res) {
 
+    console.log(req);
     let newUser = new User({
-            email: req.body.email,
-            pic_url: req.body.pic_url,
-            first_name: req.body.first_name,
-            last_name : req.body.last_name,
-            user_id: req.body.user_id,
-            token: req.body.token,
+        email: req.body.email,
 
-        });
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        token: req.body.token,
+        userinfo: {
+            type: 'sample',
+            full_name: req.body.first_name + req.body.last_name,
+            token: req.body.token,
+            pic_url: req.body.pic_url
+        }
+
+
+    });
     newUser.save((err, output) => {
-        if(err){
+        if (err) {
             throw err;
             res.status(500).end();
         }
@@ -122,7 +134,7 @@ router.post('/samples/sign_up', function (req, res) {
 });
 
 router.get('/samples/sign_in', function (req, res) {
-    var max = 3;
+    var max = 1;
     var min = 1;
     var rand = Math.floor(Math.random() * (max - min + 1)) + min;
     console.log(rand);
@@ -136,14 +148,28 @@ router.get('/samples/sign_in', function (req, res) {
         if (user === null)
             res.status(500).end();
         else {
-            res.status(200).json({
+            res.status(200).json(
                 user
-            });
+            );
         }
 
     });
 
 });
+
+router.delete('/deleteSpecificUser/:email', (req, res) => {
+
+    console.log(req.params.email);
+    User.remove({email: req.params.email}, (err, output) => {
+        if (err) res.status(500).end();
+
+        res.status(200).json({
+            success: true
+        })
+    });
+
+});
+
 
 router.get('/allusers', function (req, res) {
 
@@ -152,14 +178,12 @@ router.get('/allusers', function (req, res) {
         if (err) res.status(500);
         else
             res.json(users);
-
-
     });
 });
 
-router.delete('/deleteUser', (req, res) => {
-    console.log(req.params.id);
-    User.remove({id: req.params.id}, (err, ouput) => {
+router.delete('/deleteUser/:uid', (req, res) => {
+    console.log(req.params.uid);
+    User.remove({_id: req.params.id}, (err, ouput) => {
         if (err) res.status(500).end();
         else
             res.status(200).json({

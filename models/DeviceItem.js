@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 mongoose.Promise = Promise;
 
 var schema = mongoose.Schema({
-    // id : {type : String, required : true},
+    user : {type : String, required : true},
     deviceCom : {type : String, requied : true},
     deviceName : {type : String, requied : true},
     deviceType : {type : String, requied : true},
