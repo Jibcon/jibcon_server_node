@@ -4,6 +4,7 @@ var waterfall = require('async-waterfall');
 var User = require('../models/user');
 var https = require('https');
 var async = require('async');
+
 var rand_token = require('rand-token');
 /* GET users listing. */
 router.get('/', function (req, res, next) {
@@ -31,20 +32,20 @@ function facebookLogin(access_token, res) {
                     https.get(path, (response) => {
                         response.on('data', (d) => {
                             var json = JSON.parse(d);
-                            console.log('grap api data : ',json);
+                            console.log('grap api data : ', json);
                             var newUser = new User({
-                                email : json.email,
-                                first_name:  json.first_name,
-                                last_name : json.last_name,
-                                pic_url : json.picture.data.url,
-                                user_id : json.id,
-                                token : rand_token.generate(48)
+                                email: json.email,
+                                first_name: json.first_name,
+                                last_name: json.last_name,
+                                pic_url: json.picture.data.url,
+                                user_id: json.id,
+                                token: rand_token.generate(48)
                             });
 
                             console.log(json.picture.data.url);
                             newUser.save((err) => {
                                 console.log('saving error');
-                                if(err) res.status(500);
+                                if (err) res.status(500);
 
                             });
                             foundUser = newUser;
@@ -62,10 +63,6 @@ function facebookLogin(access_token, res) {
                     res.status(200).json(foundUser);
                 }
 
-
-
-                //dbcheck, undefined -> signup
-                //res -> 검색된 내용
             });
 
 
@@ -73,6 +70,15 @@ function facebookLogin(access_token, res) {
 
     }).on('error', (e) => {
         console.log(e);
+    });
+}
+
+function samplelogin(access_token, res) {
+    User.findOne({token: access_token}, (err, user) => {
+        if (err) {
+            throw err;
+        }
+
     });
 }
 
@@ -92,11 +98,55 @@ router.post('/social_login_or_signup', (req, res) => {
     } else if (type == 'naver') {
 
     }
-    else if (type == 'sample') {
-
-    }
 });
+router.post('/samples/sign_up', function (req, res) {
+
+    let newUser = new User({
+            email: req.body.email,
+            pic_url: req.body.pic_url,
+            first_name: req.body.first_name,
+            last_name : req.body.last_name,
+            user_id: req.body.user_id,
+            token: req.body.token,
+
+        });
+    newUser.save((err, output) => {
+        if(err){
+            throw err;
+            res.status(500).end();
+        }
+        res.status(200).json({
+            output
+        })
+    })
+});
+
+router.get('/samples/sign_in', function (req, res) {
+    var max = 3;
+    var min = 1;
+    var rand = Math.floor(Math.random() * (max - min + 1)) + min;
+    console.log(rand);
+
+    User.findOne({token: rand}, (err, user) => {
+        if (err) {
+
+            res.status(500).end();
+            throw err;
+        }
+        if (user === null)
+            res.status(500).end();
+        else {
+            res.status(200).json({
+                user
+            });
+        }
+
+    });
+
+});
+
 router.get('/allusers', function (req, res) {
+
 
     User.find((err, users) => {
         if (err) res.status(500);
