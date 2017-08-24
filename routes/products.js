@@ -24,9 +24,9 @@ router.get('/products/:id', function (req, res) {
     Product.find({company_id : req.params.id}, (err, product) => {
         if(err) res.status(404).end();
         else{
-            res.status(200).json({
+            res.status(200).json(
                 product
-            })
+            )
         }
     })
 });
