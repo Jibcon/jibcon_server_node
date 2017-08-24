@@ -21,11 +21,11 @@ company id로 해당 회사의 모든 기기 검색
 * */
 router.get('/products/:id', function (req, res) {
     //id : company id
-    Company.find({_id : req.params.id}, (err, companies) => {
+    Product.find({company_id : req.params.id}, (err, product) => {
         if(err) res.status(404).end();
         else{
             res.status(200).json({
-                companies
+                product
             })
         }
     })
