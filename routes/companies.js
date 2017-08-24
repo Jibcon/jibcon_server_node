@@ -19,12 +19,11 @@ router.get('/companies', function (req, res, err) {
 
 router.post('/companies', function (req, res) {
 
-    Company.findOne({company_id: req.body.company_id}, (err, _company) => {
+    Company.findOne({company_name: req.body.company_name}, (err, _company) => {
         if (err) res.status(500).end();
-        if (_company) res.status(500).end();
+        if (_company) res.status(404).end();//같은 이름의 회사 이미 존재
         else {
             let company = new Company({
-                company_id: req.body.company_id,
                 company_name: req.body.company_name
             });
             console.log('??');
@@ -42,8 +41,8 @@ router.post('/companies', function (req, res) {
 
 });
 
-router.delete('/companies', (req, res) => {
-    Company.remove({company_id: req.body.company_id}, (err, output) => {
+router.delete('/companies/:id', (req, res) => {
+    Company.remove({_id: req.params.id}, (err, output) => {
         if (err) res.status(500);
         else
             res.status(200).json({

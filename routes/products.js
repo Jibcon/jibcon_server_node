@@ -3,30 +3,51 @@ var router = express.Router();
 var Company = require('../models/company');
 var Product = require('../models/product');
 
+
+//모든 기기 검색
 router.get('/products', function (req, res) {
-    Product.find((err, products) => {
+    Product.find({}, (err, products) => {
         if (err) {
-            res.status(404);
+            res.status(404).end();
         } else {
             res.status(200).json(products);
         }
     });
 });
 
-router.post('/products', function (req, res) {
 
+/*
+company id로 해당 회사의 모든 기기 검색
+* */
+router.get('/products/:id', function (req, res) {
+    //id : company id
+    Company.find({_id : req.params.id}, (err, companies) => {
+        if(err) res.status(404).end();
+        else{
+            res.status(200).json({
+                companies
+            })
+        }
+    })
+});
+
+/*
+특정 회사로 기기 추가
+* */
+router.post('/products/:id', function (req, res) {
+//id : company id
     let company;
-    console.log(req.body.company_name);
+    //console.log(req.body.company_name);
 
-    Company.findOne({company_name: req.body.company_name}, (err, _company) => {
+    Company.findById(req.params.id, (err, _company) => {
         if (err) {
             res.status(404);
         }
+        if(_company == null) res.status(404).end();//company not found
         company = _company;
 
           let product = new Product({
-                company_id: company.company_id,
-                product_id: Product.id,
+                company_id: company._id,
                 product_name: req.body.product_name,
             }
         );

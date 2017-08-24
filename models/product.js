@@ -3,7 +3,6 @@ mongoose.Promise = Promise;
 
 var schema = mongoose.Schema({
     company_id : {type : String, require :true},
-    product_id : {type :String, require : true},
     product_name : {type :String, require :true},
 
 });

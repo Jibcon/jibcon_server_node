@@ -33,10 +33,10 @@ router.put('/devices/:id', (req, res) => {
         device.content = req.body.contnet;
         device.aeName = req.body.aeName;
         device.save((err) => {
-            if(err) res.status(500).end();
+            if (err) res.status(500).end();
             else
                 res.status(200).json({
-                    success : true
+                    success: true
                 });
         });
 
@@ -68,6 +68,7 @@ router.post('/devices', (req, res) => {
     console.log(userToken);
     var newDevice = new DeviceItem({
         user: userToken,
+        //user를 Token으로 검색하고 _id로 검색후 저장
         deviceCom: req.body.deviceCom,
         deviceName: req.body.deviceName,
         deviceType: req.body.deviceType,
@@ -88,5 +89,90 @@ router.post('/devices', (req, res) => {
 
 
 });
+
+
+router.get('/waterfalltest', (req, res) => {
+    // waterfall([
+    //     function(callback){
+    //         callback(null, 'hello');
+    //     },
+    //     function(arg1, callback){
+    //          console.log('arg1 : ',arg1);
+    //          callback(null, arg1, 'world');
+    //     },
+    //     function(arg1, arg2, callback){
+    //         console.log('arg1 : ', arg1, 'arg2 : ',arg2);
+    //          callback(null, arg1, arg2, 'node');
+    //     },
+    //     function(err, result){
+    //
+    //         console.log('result : ',result);
+    //
+    //     }
+    // ]);
+    waterfall([
+        function (callback) {
+            console.log('1');
+            callback(null, '1');
+        },
+        function (arg1, callback) {
+
+            console.log('2');
+
+            callback(null, '1');
+        },
+        function (arg1, callback) {
+
+            console.log('3');
+            callback(null, 'done');
+        },
+
+    ]);
+
+});
+
+//
+// Animal.remove({}, function () {
+//     console.log("1. Animal remove success");
+//     Animal.create(animalData, function (err) {
+//         if (err) console.error("Save Failed.", err);
+//         else console.log("2. Animal create success");
+//         newAnimal.save(function (err, instance) {
+//             if (err) console.error("Save Failed.", err);
+//             else console.log("3. elephant new success");
+//
+//             db.close(function () {
+//                 console.log("4. db connection closed");
+//             });
+//         });
+//     });
+// });
+
+//
+//
+// Animal.remove({}, () => {
+//     waterfall([
+//         function (callback) {
+//             console.log('1. Animal remove success');
+//             Animal.create(animalData, (err) => {
+//                 if (err) console.log('Save Failed', err);
+//                 else console.log('2. Animal create success');
+//
+//             });
+//             callback(null, 'newAnimal');
+//         },
+//         function (newAnimal, callback) {
+//             newAnimal.save((err, instance) => {
+//                 if (err) console.err('save failed');
+//                 else console.log('3. elephant new success');
+//             });
+//             db.close(() => {
+//                 console.log('4. db connection closed');
+//             })
+//         }
+//     ]);
+//
+// });
+
 
 module.exports = router;
