@@ -105,7 +105,7 @@ describe('Company CRUD Tests:', function() {
                     'name': 'testCompany',
                 })
                 .end(function (err, res) {
-                    expect(Object.getOwnPropertyNames(res.body)).to.deep.equal([
+                    expect(Object.getOwnPropertyNames(res.body)).to.have.members([
                         "_id",
                         "name",
                         "__v",
@@ -135,11 +135,14 @@ describe('Company CRUD Tests:', function() {
                     });
             }).then(function (_id) {
                 return new Promise(function (resolve, reject) {
-                    Company.findById(_id, function(err, company) {
+                    Company.findById(_id, function(err, doc) {
+                        doc = JSON.parse(JSON.stringify(doc));
+                        console.log("doc:", doc);
+                        console.log("body:", body);
                         if (err) {
                             reject(err);
                         }
-                        expect(body).to.be.deep.equal(company);
+                        expect(body).to.be.deep.equal(doc);
                         resolve();
                     });
                 });
@@ -211,33 +214,24 @@ describe('Company CRUD Tests:', function() {
 
         it('should return posted companies', function (done) {
             postCompanyPromise("testCompany")()
-                .then(
-                    postCompanyPromise("testCompany2")
-                ).then(
-                function () {
-                    return new Promise(function (resolve, reject) {
-                        chai.request(app)
-                            .get('/api/companies')
-                            .end(function (err, res) {
-                                // console.log("res.body: ", res.body[0]);
-                                expect(res.body[0]).to.be.like(
-                                    {
-                                        name: 'testCompany2',
-                                    }
-                                );
+                .then(function () {
+                        return new Promise(function (resolve, reject) {
+                            chai.request(app)
+                                .get('/api/companies')
+                                .end(function (err, res) {
+                                    expect(res.body).to.be.like([
+                                            {
+                                                name: 'testCompany',
+                                            },
+                                        ]
+                                    );
 
-                                expect(res.body[1]).to.be.like(
-                                    {
-                                        name: 'testCompany',
-                                    }
-                                );
-
-                                expect(res.body).has.lengthOf(2);
-                                resolve();
-                            })
-                    })
-                }
-            ).then(function () {
+                                    expect(res.body).has.lengthOf(1);
+                                    resolve();
+                                })
+                        })
+                    }
+                ).then(function () {
                 done();
             });
         });
