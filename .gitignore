@@ -1,5 +1,6 @@
 .idea/*
 bin/config.js
+package-lock.json
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Node template

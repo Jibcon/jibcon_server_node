@@ -14,7 +14,10 @@ var app = express();
 
 var mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost/mongodb');
+mongoose.connect('mongodb://localhost/mongodb', {
+  useMongoClient: true
+  /* other options */
+});
 var db = mongoose.connection;
 db.on('error', console.error);
 db.once('open', function(){
