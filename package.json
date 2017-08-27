@@ -19,7 +19,11 @@
   },
   "main": "app.js",
   "devDependencies": {
-    "babel-cli": "^6.26.0"
+    "babel-cli": "^6.26.0",
+    "chai": "^4.1.1",
+    "chai-http": "^3.0.0",
+    "chai-like": "^0.2.14",
+    "mocha": "^3.5.0"
   },
   "author": "",
   "license": "ISC",
