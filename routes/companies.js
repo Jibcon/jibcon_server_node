@@ -3,6 +3,29 @@ var router = express.Router();
 var Company = require('../models/company');
 var Product = require('../models/product');
 
+
+router.param("cId", function (req, res, next, id) {
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        var err = new Error("Invalid id.");
+        err.status = 400;
+        return next(err);
+    }
+
+    Company.findById(id, function (err, doc) {
+        if (err) {
+            return next(err);
+        }
+        if (!doc) {
+            err = new Error("Not found.");
+            err.status = 404;
+            return next(err);
+        }
+
+        req.company = doc;
+        return next();
+    });
+});
+
 router.get('/companies', function (req, res) {
 
     Company.find(function (err, companies) {
@@ -17,18 +40,21 @@ router.get('/companies', function (req, res) {
     });
 });
 
-router.post('/companies', function (req, res, next) {
+router.get('/companies/:cId', function (req, res) {
+    res.json(req.company);
+});
 
-    let company = new Company({
-        company_name: req.body.company_name
-    });
-    company.save((err) => {
+router.post('/companies', function (req, res, next) {
+    let company = new Company(req.body);
+
+    company.save((err, company) => {
         if (err) {
+            err.status = 400;
+            err.message = "You must contain the name.";
             return next(err);
         }
-        res.status(201).json({
-            success: true
-        });
+        res.status(201);
+        res.json(company);
     });
 });
 
