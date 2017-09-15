@@ -10,6 +10,7 @@ var users = require('./routes/users');
 var company = require('./routes/companies');
 var product = require('./routes/products');
 var Device = require('./routes/devices');
+var mqttRouter = require('./routes/mqttRouter');
 var app = express();
 
 var mongoose = require('mongoose');
@@ -39,7 +40,7 @@ app.use('/', index);
 app.use('/api', users);
 app.use ('/api',Device);
 app.use('/api', company);
-
+app.use('/api', mqttRouter);
 app.use('/api', product);
 
 // catch 404 and forward to error handler

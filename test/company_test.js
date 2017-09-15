@@ -10,7 +10,7 @@ chai.use(like);
 
 describe('Company CRUD Tests:', function() {
     var Company;
-    // this.timeout(10000);
+     this.timeout(10000);
 
     before('Initialize Company', function () {
         Company = require("../models/company");

@@ -41,7 +41,7 @@ router.post('/products/:id', function (req, res) {
 
     Company.findById(req.params.id, (err, _company) => {
         if (err) {
-            res.status(404);
+            res.status(404).end();
         }
         if(_company == null) res.status(404).end();//company not found
         company = _company;

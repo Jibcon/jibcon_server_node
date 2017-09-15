@@ -40,11 +40,11 @@ function facebookLogin(access_token, res) {
                                 last_name: json.last_name,
                                 pic_url: json.picture.data.url,
                                 token: generated_token,
-                                user_id : json.id,
+                                user_id: json.id,
                                 userinfo: {
-                                    type : 'facebook',
-                                    full_name : json.first_name + json.last_name,
-                                    token : generated_token,
+                                    type: 'facebook',
+                                    full_name: json.first_name + json.last_name,
+                                    token: generated_token,
                                     pic_url: json.picture.data.url
                                 },
                             });
