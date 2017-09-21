@@ -6,38 +6,23 @@ var querystring = require('querystring');
 var xml2js = require('xml2js');
 var parser = new xml2js.Parser();
 
-//
-// var client = mqtt.connect('mqtt://13.124.172.12/aei-jibcon_test');
-// var m2m = 'm2m:sub';
-// var mobiusPath = "http://13.124.172.12:7579/Mobius/ae-smarts/";
-// var reqBody = {
-//     "m2m:sub": {
-//         "rn": 'aei-jibcon_test',
-//         "enc": {
-//             "net": "[1, 3, 4]"
-//         },
-//         "nu": '[mqtt://13.124.172.12/aei-jibcon_test]',
-//         "nct": '2',
-//         "pn": '1'
-//     }
-// };
-// var reqHeaders = {
-//     'Accept': 'application/json',
-//     'M-M2M-RI': '12345',
-//     'X-M2M-Origin': 'SOrigin',
-//     'Content-Type': 'application/json;ty=23'
-// };
-//
-// router.post('/addSub', (req, res) => {
-//
-//     mobiusPath = mobiusPath + req.body.cntName;
-//     console.log(mobiusPath);
-//     console.log('??');
-//     console.log(reqBody);
-//
-//
-// });
-//
+var FCM = require('fcm-push');
+
+var serverKey = 'AAAA7Lx5bLQ:APA91bHMHOpGYBbCnK2kVZJtPv5erQKsnMIuaQJ6WLAxZvnrBdNR6l9jv1moTjumJq70jp9a5fL9ow5KKE_-D17eGCkBV_-HW9zLTnlmzVx48QUs49V9LJiOAqzdYHyCMH1r-8yTjdk0';
+var fcm = new FCM(serverKey);
+
+var pushMessage = {
+    to: 'crnWU93JgDc:APA91bE7GxkA8QUwSJQwFhauOMYRS9ltUngMOI41ThI-VK5ij9GkOI1yZE4eKkuntpgdAxa-HLGPRoonXMHz-26rMbELh_t58iDagUcHKZDvRMEXfmsqtFV3MyglOrQNypUmf1PirjDV', // required fill with device token or topics
+    data: {
+        your_custom_data_key: 'your_custom_data_value'
+    },
+    notification: {
+        title: 'Title of your push notification',
+        body: 'Body of your push notification'
+    }
+};
+
+
 const postData = {
     "m2m:sub": {
         "rn": 'aei-jibcon_test2',
@@ -93,15 +78,35 @@ router.post('/addSub', (req, res) => {
 
 function connectMqtt() {
     var client = mqtt.connect('mqtt://13.124.172.12/aei-jibcon_test');
-    client.on('connect', () =>{
+    client.on('connect', () => {
         client.subscribe('/oneM2M/req/Mobius/#');
         //client.subscribe('/Mobius/ae-smarts/#')
         console.log('mqtt connect');
     });
     client.on('message', (topic, message) => {
-        switch(topic){
+        switch (topic) {
             case '/oneM2M/req/Mobius/aei-jibcon_test2/json' :
                 console.log(message.toString());
+
+//callback style
+                fcm.send(pushMessage, function (err, response) {
+                    if (err) {
+                        console.log("Something has gone wrong!");
+                    } else {
+                        console.log("Successfully sent with response: ", response);
+                    }
+                });
+
+//promise style
+//                 fcm.send(pushMessage)
+//                     .then(function (response) {
+//                         console.log("Successfully sent with response: ", response);
+//                     })
+//                     .catch(function (err) {
+//                         console.log("Something has gone wrong!");
+//                         console.error(err);
+//                     });
+
                 break;
         }
         //console.log(message.toString());

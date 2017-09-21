@@ -104,15 +104,15 @@ router.post('/social_sign_up_or_in', (req, res) => {
 
     }
 });
-router.post('/samples/sign_up', function (req, res) {
+router.post('/samples_sign_up', function (req, res) {
 
-    console.log(req);
     let newUser = new User({
         email: req.body.email,
 
         first_name: req.body.first_name,
         last_name: req.body.last_name,
         token: req.body.token,
+
         userinfo: {
             type: 'sample',
             full_name: req.body.first_name + req.body.last_name,
@@ -179,6 +179,10 @@ router.get('/allusers', function (req, res) {
         else
             res.json(users);
     });
+});
+
+router.put('/updateUser',(req, res) => {
+
 });
 
 router.delete('/deleteUser/:uid', (req, res) => {

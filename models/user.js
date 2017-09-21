@@ -8,6 +8,7 @@ var userSchema = new Schema({
     last_name: {type: String, required: true},
     token: {type: String, required: true},
     user_id : {type : String},
+    fcm_token : {type : String},
     userinfo: {
         pic_url: {type: String},
         type: {type: String},
