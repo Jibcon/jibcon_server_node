@@ -79,15 +79,33 @@ function mqttAddSubscription(subscribtionTopic) {
 
 }
 
-function deleteSubscription(subscribtionTopic) {
+function deleteSubscription(req, res, aeName, cntName, subName) {
 
-    mqttClient.on('connect', () => {
-        console.log('delete start');
-        mqttClient.unsubscribe(subscribtionTopic);
-        console.log('delete end');
+    var option = JSON.parse(JSON.stringify(httpRequestOptions));
+    option.path = option.path + '/' + aeName + '/' + cntName + '/' + subName;
+    option.method = 'DELETE';
+    var httpReq = http.request(option, (httpRes) => {
+
+        console.log(`STATUS: ${httpRes.statusCode}`);
+        console.log(`HEADERS: ${JSON.stringify(httpRes.headers)}`);
+        httpRes.on('data', (chunk) => {
+            console.log(`BODY: ${chunk}`);
+
+        });
+        httpRes.on('end', () => {
+            console.log('No more data in response.');
+            res.status(201).end();
+        });
+
+
     });
-}
+    httpReq.on('error', (e) => {
+        console.error(`problem with request: ${e.message}`);
+    });
 
+    //httpReq.write(JSON.stringify(subData));
+    httpReq.end();
+}
 
 
 function fcmMessageSending(pushMessage) {
@@ -110,7 +128,7 @@ router.post('/addSub', (req, res) => {
 
     option.path = httpRequestOptions.path + '/' + req.body.aeName + '/' + req.body.cntName;
     subData[`m2m:sub`].rn = req.body.subName;
-    subData[`m2m:sub`].nu = [mqttUrl+'/'+req.body.subName];
+    subData[`m2m:sub`].nu = [mqttUrl + '/' + req.body.subName];
 
     console.log(option);
     console.log(subData);
@@ -137,13 +155,13 @@ router.post('/addSub', (req, res) => {
     });
     //console.log(httpReq);
 // write data to request body
-    httpReq.write(JSON.stringify(subscriptionData));
+    httpReq.write(JSON.stringify(subData));
     httpReq.end();
 });
 
 
 router.post('/deleteSub', (req, res) => {
-    deleteSubscription(req.body.topic);
+    deleteSubscription(req, res,req.body.aeName, req.body.cntName, req.body.subName);
     res.status(201).end();
 });
 
