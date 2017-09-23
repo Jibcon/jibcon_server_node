@@ -18,22 +18,18 @@ function facebookLogin(access_token, res) {
     https.get(path, (response) => {
         response.on('data', (d) => {
             var json = JSON.parse(d);
-            console.log(json);
             User.findOne({user_id: json.id}, (err, user) => {
                 var foundUser;
-                console.log(user);
                 if (err) res.status(400);
                 if (user == null) {
                     //signup
-                    console.log('signup');
                     var path = `https://graph.facebook.com/${json.id}/?access_token=${access_token}&fields=email,picture,first_name,last_name`;
 
-                    console.log(path);
                     https.get(path, (response) => {
                         response.on('data', (d) => {
                             var json = JSON.parse(d);
                             var generated_token = rand_token.generate(48);
-                            console.log('grap api data : ', json);
+                            console.log('graph api data : ', json);
                             var newUser = new User({
                                 email: json.email,
                                 first_name: json.first_name,
@@ -157,19 +153,6 @@ router.get('/samples/sign_in', function (req, res) {
 
 });
 
-router.delete('/deleteSpecificUser/:email', (req, res) => {
-
-    console.log(req.params.email);
-    User.remove({email: req.params.email}, (err, output) => {
-        if (err) res.status(500).end();
-
-        res.status(200).json({
-            success: true
-        })
-    });
-
-});
-
 
 router.get('/allusers', function (req, res) {
 
@@ -181,19 +164,26 @@ router.get('/allusers', function (req, res) {
     });
 });
 
-router.put('/updateUser',(req, res) => {
-
-});
-
-router.delete('/deleteUser/:uid', (req, res) => {
-    console.log(req.params.uid);
-    User.remove({_id: req.params.id}, (err, ouput) => {
-        if (err) res.status(500).end();
-        else
-            res.status(200).json({
-                success: true
-            })
+//다른 기기로 로그인 할 경우 현재 기기의 fcm 토큰으로 업데이트
+router.put('/updateUser/:token', (req, res) => {
+    User.findOne({token: req.params.token}, (err, user) => {
+        if (err) res.status(404).end();
+        else {
+            user.fcm_token = req.body.fcm_token;
+            res.status(201).json(user);
+        }
     });
+});
+router.delete('/deleteUser/:id', (req, res) => {
+    console.log(req.params.id);
+    res.status(200).end();
+    // User.remove({_id: req.params.id}, (err, ouput) => {
+    //     if (err) res.status(500).end();
+    //     else
+    //         res.status(200).json({
+    //             success: true
+    //         })
+    // });
 });
 
 module.exports = router;
