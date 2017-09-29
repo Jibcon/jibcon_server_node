@@ -11,7 +11,7 @@ var async = require('async');
 var serverKey = 'AAAA7Lx5bLQ:APA91bHMHOpGYBbCnK2kVZJtPv5erQKsnMIuaQJ6WLAxZvnrBdNR6l9jv1moTjumJq70jp9a5fL9ow5KKE_-D17eGCkBV_-HW9zLTnlmzVx48QUs49V9LJiOAqzdYHyCMH1r-8yTjdk0';
 var fcm = new FCM(serverKey);
 var pushMessage = {
-    to: 'crnWU93JgDc:APA91bE7GxkA8QUwSJQwFhauOMYRS9ltUngMOI41ThI-VK5ij9GkOI1yZE4eKkuntpgdAxa-HLGPRoonXMHz-26rMbELh_t58iDagUcHKZDvRMEXfmsqtFV3MyglOrQNypUmf1PirjDV', // required fill with device token or topics
+    to: '', // required fill with device token or topics
     data: {
         your_custom_data_key: 'your_custom_data_value'
     },
@@ -49,23 +49,28 @@ const httpRequestOptions = {
 }
 
 
-function mqttAddSubscription(subscribtionTopic) {
+function mqttAddSubscription(subscribtionTopic, receiver) {
     console.log('topic : ' + subscribtionTopic);
     console.log('start');
     var mqttClient = mqtt.connect(mqttUrl);
     mqttClient.on('connect', () => {
-        console.log('??');
         console.log(subscribtionTopic);
         mqttClient.subscribe(subscribtionTopic);
         console.log('connect to ' + subscribtionTopic);
     });
     mqttClient.on('message', (topic, message) => {
         if (topic == subscribtionTopic) {
+            console.log('message : ' + message);
             var m2m = JSON.parse(message).pc.sgn.nev.rep;
-            m2m = m2m[`m2m:cin`];
-            console.log(m2m.con);
-            pushMessage.notification.body = m2m.con;
-            fcmMessageSending(pushMessage);
+
+            if (m2m[`m2m:cin`] != null) {
+
+                m2m = m2m[`m2m:cin`];
+                console.log(m2m.con);
+                pushMessage.to = receiver;
+                pushMessage.notification.body = m2m.con;
+                fcmMessageSending(pushMessage);
+            }
         }
 
     });
@@ -134,7 +139,7 @@ router.post('/addSub', (req, res) => {
         httpRes.on('data', (chunk) => {
             console.log(`BODY: ${chunk}`);
             //    todo addsubscription부터
-            mqttAddSubscription(req.body.topic);
+            mqttAddSubscription(req.body.topic,req.body.receiver);
 
         });
         httpRes.on('end', () => {
@@ -155,8 +160,10 @@ router.post('/addSub', (req, res) => {
 
 
 router.post('/deleteSub', (req, res) => {
-    deleteSubscription(req, res,req.body.aeName, req.body.cntName, req.body.subName);
-    res.status(201).end();
+    deleteSubscription(req, res, req.body.aeName, req.body.cntName, req.body.subName);
+    res.status(201).end({
+        success:true
+    });
 });
 
 //mqttInitialization();
