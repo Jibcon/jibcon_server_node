@@ -89,17 +89,18 @@ function deleteSubscription(req, res, aeName, cntName, subName) {
         console.log(`HEADERS: ${JSON.stringify(httpRes.headers)}`);
         httpRes.on('data', (chunk) => {
             console.log(`BODY: ${chunk}`);
+            res.status(201).end();
 
         });
         httpRes.on('end', () => {
             console.log('No more data in response.');
-            res.status(201).end();
         });
 
 
     });
     httpReq.on('error', (e) => {
         console.error(`problem with request: ${e.message}`);
+        res.status(500).end();
     });
 
     //httpReq.write(JSON.stringify(subData));
@@ -139,7 +140,7 @@ router.post('/addSub', (req, res) => {
         httpRes.on('data', (chunk) => {
             console.log(`BODY: ${chunk}`);
             //    todo addsubscription부터
-            mqttAddSubscription(req.body.topic,req.body.receiver);
+            mqttAddSubscription(req.body.topic, req.body.receiver);
 
         });
         httpRes.on('end', () => {
@@ -161,9 +162,7 @@ router.post('/addSub', (req, res) => {
 
 router.post('/deleteSub', (req, res) => {
     deleteSubscription(req, res, req.body.aeName, req.body.cntName, req.body.subName);
-    res.status(201).end({
-        success:true
-    });
+
 });
 
 //mqttInitialization();
