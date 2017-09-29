@@ -20,15 +20,13 @@ router.get('/companies', function (req, res) {
 router.post('/companies', function (req, res, next) {
 
     let company = new Company({
-        company_name: req.body.company_name
+        name: req.body.name
     });
-    company.save((err) => {
+    company.save((err, result) => {
         if (err) {
-            return next(err);
+            res.status(404).end();
         }
-        res.status(201).json({
-            success: true
-        });
+        res.status(201).json(result);
     });
 });
 

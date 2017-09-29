@@ -5,7 +5,8 @@ var DeviceItem = require('../models/DeviceItem');
 var waterfall = require('async-waterfall');
 router.get('/devices', (req, res) => {
 
-    var userToken = req.headers.authorization.substr(6);
+    var userToken = req.headers.authorization.substr(6,1);
+    //Token 1
     console.log(userToken);
     DeviceItem.find({user: userToken}, (err, devices) => {
 
@@ -64,7 +65,7 @@ router.post('/devices', (req, res) => {
 
     if (req.body === null) res.status(500).end();
 
-    var userToken = req.headers.authorization.substr(6);
+    var userToken = req.headers.authorization.substr(6,1);
     console.log(userToken);
     var newDevice = new DeviceItem({
         user: userToken,
