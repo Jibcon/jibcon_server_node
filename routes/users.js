@@ -6,6 +6,20 @@ var https = require('https');
 var async = require('async');
 
 var rand_token = require('rand-token');
+
+const httpRequestOptions = {
+    hostname: '',
+    port: '',
+    path: '',
+    method: '',
+    headers: {
+        'Accept': 'application/json',
+        'X-M2M-RI': '12345',
+        'X-M2M-Origin': 'aei-jibcon',
+        'Content-Type': 'application/json;ty=23'
+    }
+}
+
 /* GET users listing. */
 router.get('/', function (req, res, next) {
     res.send('respond with a resource');
@@ -18,44 +32,36 @@ function facebookLogin(access_token, res) {
     https.get(path, (response) => {
         response.on('data', (d) => {
             var json = JSON.parse(d);
-            console.log(json);
             User.findOne({user_id: json.id}, (err, user) => {
                 var foundUser;
-                console.log(user);
-                if (err) res.status(400);
+                if (err) res.status(400).end();
                 if (user == null) {
                     //signup
-                    console.log('signup');
                     var path = `https://graph.facebook.com/${json.id}/?access_token=${access_token}&fields=email,picture,first_name,last_name`;
-
-                    console.log(path);
                     https.get(path, (response) => {
                         response.on('data', (d) => {
                             var json = JSON.parse(d);
                             var generated_token = rand_token.generate(48);
-                            console.log('grap api data : ', json);
+                            console.log('graph api data : ', json);
                             var newUser = new User({
                                 email: json.email,
                                 first_name: json.first_name,
                                 last_name: json.last_name,
                                 pic_url: json.picture.data.url,
                                 token: generated_token,
-                                user_id : json.id,
+                                user_id: json.id,
                                 userinfo: {
-                                    type : 'facebook',
-                                    full_name : json.first_name + json.last_name,
-                                    token : generated_token,
+                                    type: 'facebook',
+                                    full_name: json.first_name + json.last_name,
+                                    token: generated_token,
                                     pic_url: json.picture.data.url
                                 },
                             });
-
                             console.log(json.picture.data.url);
                             newUser.save((err) => {
                                 if (err) res.status(500);
-
                             });
                             foundUser = newUser;
-
                             res.status(200).json(foundUser);
                         });
                         //graph api
@@ -68,14 +74,12 @@ function facebookLogin(access_token, res) {
                     foundUser = user;
                     res.status(200).json(foundUser);
                 }
-
             });
-
-
         });
-
     }).on('error', (e) => {
+
         console.log(e);
+        res.status(500).end();
     });
 }
 
@@ -88,6 +92,69 @@ function samplelogin(access_token, res) {
     });
 }
 
+function kakaoLogin(access_token, res) {
+    var httpRequestOptions = {
+        host: 'kapi.kakao.com',
+        port: '',
+        path: '/v1/user/me',
+        method: 'GET',
+
+        headers: {
+            Authorization: 'Bearer '
+        }
+    };
+    httpRequestOptions.headers.Authorization += access_token;
+    console.log(httpRequestOptions.headers.Authorization);
+    var httpReq = https.request(httpRequestOptions, (response) => {
+        response.on('data', (d) => {
+            var foundUser;
+            var json = JSON.parse(d);
+            var generated_token = rand_token.generate(48);
+            User.findOne({user_id: json.id}, (err, user) => {
+                if (err) res.status(500).end();
+                else if (user == null) {
+                    var newUser = new User({
+                        //fcm_token: '',
+                        email: json.kaccount_email,
+                        pic_url: json.properties.thumbnail_image,
+                        token: generated_token,
+                        user_id: json.id,
+                        userinfo: {
+                            type: 'kakao',
+                            full_name: json.properties.nickname,
+                            token: generated_token,
+                            pic_url: json.properties.thumbnail_image
+                        },
+                    });
+
+                    newUser.save((err) => {
+                        if (err) res.status(500);
+                    });
+                    foundUser = newUser;
+                    res.status(200).json(foundUser);
+                } else {
+                    //login
+                    foundUser = user;
+                    res.status(200).json(foundUser._doc);
+                }
+            });
+
+        });
+        response.on('end', () => {
+            console.log('No more data in response.');
+            //res.status(201).end();
+        });
+    });
+    httpReq.on('error', (e) => {
+
+        console.log(e);
+        res.status(500).end();
+    });
+    httpReq.end();
+
+
+}
+
 router.post('/social_sign_up_or_in', (req, res) => {
     var access_token = req.body.token;
     var type = req.body.type;
@@ -98,21 +165,21 @@ router.post('/social_sign_up_or_in', (req, res) => {
 
         facebookLogin(access_token, res);
     } else if (type == 'kakao') {
-        kakaologin(access_token, res);
+        kakaoLogin(access_token, res);
 
     } else if (type == 'naver') {
 
     }
 });
-router.post('/samples/sign_up', function (req, res) {
+router.post('/samples_sign_up', function (req, res) {
 
-    console.log(req);
     let newUser = new User({
         email: req.body.email,
 
         first_name: req.body.first_name,
         last_name: req.body.last_name,
         token: req.body.token,
+
         userinfo: {
             type: 'sample',
             full_name: req.body.first_name + req.body.last_name,
@@ -157,23 +224,8 @@ router.get('/samples/sign_in', function (req, res) {
 
 });
 
-router.delete('/deleteSpecificUser/:email', (req, res) => {
-
-    console.log(req.params.email);
-    User.remove({email: req.params.email}, (err, output) => {
-        if (err) res.status(500).end();
-
-        res.status(200).json({
-            success: true
-        })
-    });
-
-});
-
 
 router.get('/allusers', function (req, res) {
-
-
     User.find((err, users) => {
         if (err) res.status(500);
         else
@@ -181,15 +233,31 @@ router.get('/allusers', function (req, res) {
     });
 });
 
-router.delete('/deleteUser/:uid', (req, res) => {
-    console.log(req.params.uid);
-    User.remove({_id: req.params.id}, (err, ouput) => {
-        if (err) res.status(500).end();
-        else
-            res.status(200).json({
-                success: true
-            })
+//다른 기기로 로그인 할 경우 현재 기기의 fcm 토큰으로 업데이트
+router.put('/updateUser/:token', (req, res) => {
+    User.findOne({token: req.params.token}, (err, user) => {
+        if (err) res.status(404).end();
+        else {
+            user.fcm_token = req.body.fcm_token;
+            res.status(201).json(user);
+        }
     });
 });
+router.delete('/deleteUser/:id', (req, res) => {
+    console.log(req.params.id);
 
+    User.remove({_id: req.params.id}, (err, ouput) => {
+        if (err) {
+            console.log('User remove error');
+            res.status(500).end();
+        }
+
+        res.status(200).json({
+            success: true
+        });
+
+    });
+
+});
 module.exports = router;
+
