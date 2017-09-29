@@ -6,6 +6,20 @@ var https = require('https');
 var async = require('async');
 
 var rand_token = require('rand-token');
+
+const httpRequestOptions = {
+    hostname: '',
+    port: '',
+    path: '',
+    method: '',
+    headers: {
+        'Accept': 'application/json',
+        'X-M2M-RI': '12345',
+        'X-M2M-Origin': 'aei-jibcon',
+        'Content-Type': 'application/json;ty=23'
+    }
+}
+
 /* GET users listing. */
 router.get('/', function (req, res, next) {
     res.send('respond with a resource');
@@ -20,11 +34,10 @@ function facebookLogin(access_token, res) {
             var json = JSON.parse(d);
             User.findOne({user_id: json.id}, (err, user) => {
                 var foundUser;
-                if (err) res.status(400);
+                if (err) res.status(400).end();
                 if (user == null) {
                     //signup
                     var path = `https://graph.facebook.com/${json.id}/?access_token=${access_token}&fields=email,picture,first_name,last_name`;
-
                     https.get(path, (response) => {
                         response.on('data', (d) => {
                             var json = JSON.parse(d);
@@ -44,14 +57,11 @@ function facebookLogin(access_token, res) {
                                     pic_url: json.picture.data.url
                                 },
                             });
-
                             console.log(json.picture.data.url);
                             newUser.save((err) => {
                                 if (err) res.status(500);
-
                             });
                             foundUser = newUser;
-
                             res.status(200).json(foundUser);
                         });
                         //graph api
@@ -64,14 +74,12 @@ function facebookLogin(access_token, res) {
                     foundUser = user;
                     res.status(200).json(foundUser);
                 }
-
             });
-
-
         });
-
     }).on('error', (e) => {
+
         console.log(e);
+        res.status(500).end();
     });
 }
 
@@ -84,6 +92,69 @@ function samplelogin(access_token, res) {
     });
 }
 
+function kakaoLogin(access_token, res) {
+    var httpRequestOptions = {
+        host: 'kapi.kakao.com',
+        port: '',
+        path: '/v1/user/me',
+        method: 'GET',
+
+        headers: {
+            Authorization: 'Bearer '
+        }
+    };
+    httpRequestOptions.headers.Authorization += access_token;
+    console.log(httpRequestOptions.headers.Authorization);
+    var httpReq = https.request(httpRequestOptions, (response) => {
+        response.on('data', (d) => {
+            var foundUser;
+            var json = JSON.parse(d);
+            var generated_token = rand_token.generate(48);
+            User.findOne({user_id: json.id}, (err, user) => {
+                if (err) res.status(500).end();
+                else if (user == null) {
+                    var newUser = new User({
+                        //fcm_token: '',
+                        email: json.kaccount_email,
+                        pic_url: json.properties.thumbnail_image,
+                        token: generated_token,
+                        user_id: json.id,
+                        userinfo: {
+                            type: 'kakao',
+                            full_name: json.properties.nickname,
+                            token: generated_token,
+                            pic_url: json.properties.thumbnail_image
+                        },
+                    });
+
+                    newUser.save((err) => {
+                        if (err) res.status(500);
+                    });
+                    foundUser = newUser;
+                    res.status(200).json(foundUser);
+                } else {
+                    //login
+                    foundUser = user;
+                    res.status(200).json(foundUser._doc);
+                }
+            });
+
+        });
+        response.on('end', () => {
+            console.log('No more data in response.');
+            //res.status(201).end();
+        });
+    });
+    httpReq.on('error', (e) => {
+
+        console.log(e);
+        res.status(500).end();
+    });
+    httpReq.end();
+
+
+}
+
 router.post('/social_sign_up_or_in', (req, res) => {
     var access_token = req.body.token;
     var type = req.body.type;
@@ -94,7 +165,7 @@ router.post('/social_sign_up_or_in', (req, res) => {
 
         facebookLogin(access_token, res);
     } else if (type == 'kakao') {
-        kakaologin(access_token, res);
+        kakaoLogin(access_token, res);
 
     } else if (type == 'naver') {
 
@@ -155,8 +226,6 @@ router.get('/samples/sign_in', function (req, res) {
 
 
 router.get('/allusers', function (req, res) {
-
-
     User.find((err, users) => {
         if (err) res.status(500);
         else
@@ -176,14 +245,19 @@ router.put('/updateUser/:token', (req, res) => {
 });
 router.delete('/deleteUser/:id', (req, res) => {
     console.log(req.params.id);
-    res.status(200).end();
-    // User.remove({_id: req.params.id}, (err, ouput) => {
-    //     if (err) res.status(500).end();
-    //     else
-    //         res.status(200).json({
-    //             success: true
-    //         })
-    // });
-});
 
+    User.remove({_id: req.params.id}, (err, ouput) => {
+        if (err) {
+            console.log('User remove error');
+            res.status(500).end();
+        }
+
+        res.status(200).json({
+            success: true
+        });
+
+    });
+
+});
 module.exports = router;
+

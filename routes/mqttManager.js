@@ -48,12 +48,6 @@ const httpRequestOptions = {
     }
 }
 
-//
-// function mqttInitialization() {
-//     var client = mqtt.connect('mqtt://52.79.180.194');
-//     mqttClient = client;
-//     console.log('mqttInitialization');
-// }
 
 function mqttAddSubscription(subscribtionTopic) {
     console.log('topic : ' + subscribtionTopic);
