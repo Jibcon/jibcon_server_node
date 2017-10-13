@@ -234,14 +234,18 @@ router.get('/allusers', function (req, res) {
 });
 
 //다른 기기로 로그인 할 경우 현재 기기의 fcm 토큰으로 업데이트
-router.put('/updateUser/:token', (req, res) => {
+router.put('/updateUser/:token/:fcm_token', (req, res) => {
     User.findOne({token: req.params.token}, (err, user) => {
         if (err) res.status(404).end();
         else {
-            user.fcm_token = req.body.fcm_token;
-            res.status(201).json(user);
+            user.fcm_token = req.params.fcm_token;
+            user.save((err) => {
+                res.status(201).json(user);
+
+            });
         }
     });
+
 });
 router.delete('/deleteUser/:id', (req, res) => {
     console.log(req.params.id);

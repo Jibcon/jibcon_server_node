@@ -11,16 +11,16 @@ var async = require('async');
 var serverKey = 'AAAA7Lx5bLQ:APA91bHMHOpGYBbCnK2kVZJtPv5erQKsnMIuaQJ6WLAxZvnrBdNR6l9jv1moTjumJq70jp9a5fL9ow5KKE_-D17eGCkBV_-HW9zLTnlmzVx48QUs49V9LJiOAqzdYHyCMH1r-8yTjdk0';
 var fcm = new FCM(serverKey);
 var pushMessage = {
-    to: 'crnWU93JgDc:APA91bE7GxkA8QUwSJQwFhauOMYRS9ltUngMOI41ThI-VK5ij9GkOI1yZE4eKkuntpgdAxa-HLGPRoonXMHz-26rMbELh_t58iDagUcHKZDvRMEXfmsqtFV3MyglOrQNypUmf1PirjDV', // required fill with device token or topics
+    to: '', // required fill with device token or topics
     data: {
-        your_custom_data_key: 'your_custom_data_value'
+        your_custom_data_key: ''
     },
     notification: {
         title: 'Jibcon',
         body: ''
     }
 };
-
+/*cnt, sub, cin 나누기*/
 var mqttUrl = "mqtt://52.79.180.194";
 
 
@@ -35,6 +35,11 @@ const subscriptionData = {
         "pn": 1
     }
 };
+const containerData = {
+    "m2m:cnt": {
+        "rn": ""
+    }
+}
 const httpRequestOptions = {
     hostname: '52.79.180.194',
     port: 7579,
@@ -49,56 +54,31 @@ const httpRequestOptions = {
 }
 
 
-function mqttAddSubscription(subscribtionTopic) {
-    console.log('topic : ' + subscribtionTopic);
-    console.log('start');
+function mqttAddSubscription(subscribtionTopic, receiver) {
+    //mqtt topic 설정
     var mqttClient = mqtt.connect(mqttUrl);
     mqttClient.on('connect', () => {
-        console.log('??');
         console.log(subscribtionTopic);
         mqttClient.subscribe(subscribtionTopic);
         console.log('connect to ' + subscribtionTopic);
     });
     mqttClient.on('message', (topic, message) => {
         if (topic == subscribtionTopic) {
+            console.log('message : ' + message);
             var m2m = JSON.parse(message).pc.sgn.nev.rep;
-            m2m = m2m[`m2m:cin`];
-            console.log(m2m.con);
-            pushMessage.notification.body = m2m.con;
-            fcmMessageSending(pushMessage);
+
+            if (m2m[`m2m:cin`] != null) {
+
+                m2m = m2m[`m2m:cin`];
+                console.log(m2m.con);
+                pushMessage.to = receiver;
+                pushMessage.notification.body = m2m.con;
+                fcmMessageSending(pushMessage);
+            }
         }
 
     });
-    console.log('end');
 
-}
-
-function deleteSubscription(req, res, aeName, cntName, subName) {
-
-    var option = JSON.parse(JSON.stringify(httpRequestOptions));
-    option.path = option.path + '/' + aeName + '/' + cntName + '/' + subName;
-    option.method = 'DELETE';
-    var httpReq = http.request(option, (httpRes) => {
-
-        console.log(`STATUS: ${httpRes.statusCode}`);
-        console.log(`HEADERS: ${JSON.stringify(httpRes.headers)}`);
-        httpRes.on('data', (chunk) => {
-            console.log(`BODY: ${chunk}`);
-
-        });
-        httpRes.on('end', () => {
-            console.log('No more data in response.');
-            res.status(201).end();
-        });
-
-
-    });
-    httpReq.on('error', (e) => {
-        console.error(`problem with request: ${e.message}`);
-    });
-
-    //httpReq.write(JSON.stringify(subData));
-    httpReq.end();
 }
 
 
@@ -113,9 +93,43 @@ function fcmMessageSending(pushMessage) {
     });
 }
 
+router.post('/addCnt', (req, res) => {
+    //sensor에서 ae, rand_token_cnt-기기종류(cnt id), fcm-token 보냄
+    //fcm_token으로 유저 검색 후 해당 유저에 기기 추가하기.
+    //기기 추가 후 addSub 요청해야함
+    var option = JSON.parse(JSON.stringify(httpRequestOptions));
+    var cntData = JSON.parse(JSON.stringify(containerData));
+
+    option.path = httpRequestOptions.path + '/' + req.body.aeName ;
+    option.headers[`Content-Type`] = "application/vnd.onem2m-res+json;ty=3";
+    cntData[`m2m:cnt`].rn = req.body.rn;
+
+    console.log(option);
+    console.log(cntData);
+    var httpReq = http.request(option, (httpRes) => {
+        console.log(`STATUS: ${httpRes.statusCode}`);
+        console.log(`HEADERS: ${JSON.stringify(httpRes.headers)}`);
+        httpRes.on('data', (chunk) => {
+            console.log(`BODY: ${chunk}`);
+
+        });
+        httpRes.on('end', () => {
+            console.log('No more data in response.');
+            res.status(201).end();
+            //todo 409, 201 구분하기.
+        });
+    });
+    httpReq.on('error', (e) => {
+        console.error(`problem with request: ${e.message}`);
+    });
+    //console.log(httpReq);
+// write data to request body
+    httpReq.write(JSON.stringify(cntData));
+    httpReq.end();
+})
+
 
 router.post('/addSub', (req, res) => {
-
 
     var option = JSON.parse(JSON.stringify(httpRequestOptions));
     var subData = JSON.parse(JSON.stringify(subscriptionData));
@@ -124,9 +138,6 @@ router.post('/addSub', (req, res) => {
     subData[`m2m:sub`].rn = req.body.subName;
     subData[`m2m:sub`].nu = [mqttUrl + '/' + req.body.subName];
 
-    console.log(option);
-    console.log(subData);
-
     var httpReq = http.request(option, (httpRes) => {
 
         console.log(`STATUS: ${httpRes.statusCode}`);
@@ -134,12 +145,12 @@ router.post('/addSub', (req, res) => {
         httpRes.on('data', (chunk) => {
             console.log(`BODY: ${chunk}`);
             //    todo addsubscription부터
-            mqttAddSubscription(req.body.topic);
+            mqttAddSubscription(req.body.topic, req.body.receiver);
 
         });
         httpRes.on('end', () => {
             console.log('No more data in response.');
-            res.status(201).end();
+            res.status(`${httpRes.statusCode}`).end();
         });
 
 
@@ -147,40 +158,40 @@ router.post('/addSub', (req, res) => {
     httpReq.on('error', (e) => {
         console.error(`problem with request: ${e.message}`);
     });
-    //console.log(httpReq);
-// write data to request body
     httpReq.write(JSON.stringify(subData));
     httpReq.end();
+
 });
 
 
 router.post('/deleteSub', (req, res) => {
-    deleteSubscription(req, res,req.body.aeName, req.body.cntName, req.body.subName);
-    res.status(201).end();
+    var option = JSON.parse(JSON.stringify(httpRequestOptions));
+    option.path = option.path + '/' + req.body.aeName + '/' + req.body.cntName + '/' + req.body.subName;
+    option.method = 'DELETE';
+    var httpReq = http.request(option, (httpRes) => {
+
+        console.log(`STATUS: ${httpRes.statusCode}`);
+        console.log(`HEADERS: ${JSON.stringify(httpRes.headers)}`);
+        httpRes.on('data', (chunk) => {
+            console.log(`BODY: ${chunk}`);
+
+        });
+        httpRes.on('end', () => {
+            console.log('No more data in response.');
+            res.status(201).end();
+
+        });
+
+
+    });
+    httpReq.on('error', (e) => {
+        console.error(`problem with request: ${e.message}`);
+        res.status(500).end();
+    });
+
+    //httpReq.write(JSON.stringify(subData));
+    httpReq.end();
 });
 
-//mqttInitialization();
-//connectMqtt();
-//
-// function connectMqtt() {
-//
-//     var client = mqtt.connect('mqtt://52.79.180.194');
-//     client.on('connect', () => {
-//         client.subscribe('/oneM2M/req/Mobius/aei-jibcon_test2/#');
-//         //subscribe 는 subscription 이름대로.
-//
-//         console.log('mqtt connect');
-//     });
-//     client.on('message', (topic, message) => {
-//         switch (topic) {
-//             case '/oneM2M/req/Mobius/aei-jibcon_test2/json' : //oneM2M/req/Mobius/subscription이름
-//                 var m2m = JSON.parse(message).pc.sgn.nev.rep;
-//                 m2m = m2m[`m2m:cin`];
-//                 console.log(m2m.con);
-//                 pushMessage.notification.body = m2m.con;
-//                 fcmMessageSending(pushMessage);
-//         }
-//     });
-// }
 
 module.exports = router;
