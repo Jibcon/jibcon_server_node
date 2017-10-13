@@ -3,9 +3,10 @@ var router = express.Router();
 var User = require('../models/user');
 var DeviceItem = require('../models/DeviceItem');
 var waterfall = require('async-waterfall');
+var MobiusManager = require('./MobiusManager');
 router.get('/devices', (req, res) => {
 
-    var userToken = req.headers.authorization.substr(6,1);
+    var userToken = req.headers.authorization.substr(6, 1);
     //Token 1
     console.log(userToken);
     DeviceItem.find({user: userToken}, (err, devices) => {
@@ -52,11 +53,16 @@ router.get('/alldevices', (req, res) => {
 });
 
 router.delete('/deleteDevice/:id', (req, res) => {
-    console.log(req.params.id);
-    DeviceItem.remove({_id: req.params.id}, (err, output) => {
-        res.status(200).json({
-            success: true
-        });
+    var userToken = req.headers.authorization.substr(6, 1);
+    //Token 1
+    console.log(userToken);
+    DeviceItem.remove({$and: [{user: userToken}, {_id: req.params.id}]}, (err, output) => {
+        if(err) res.status(501).end();
+        else{
+            res.status(201).json({
+                success:true
+            });
+        }
     });
 });
 
@@ -65,7 +71,7 @@ router.post('/devices', (req, res) => {
 
     if (req.body === null) res.status(500).end();
 
-    var userToken = req.headers.authorization.substr(6,1);
+    var userToken = req.headers.authorization.substr(6, 1);
     console.log(userToken);
     var newDevice = new DeviceItem({
         user: userToken,
@@ -83,6 +89,8 @@ router.post('/devices', (req, res) => {
 
     newDevice.save((err) => {
         if (err) throw err;
+
+
         res.status(200).json({
             success: true
         })

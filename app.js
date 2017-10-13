@@ -10,7 +10,7 @@ var users = require('./routes/users');
 var company = require('./routes/companies');
 var product = require('./routes/products');
 var Device = require('./routes/devices');
-var mqttRouter = require('./routes/mqttManager');
+var mobiusManager = require('./routes/MobiusManager');
 var app = express();
 
 var mongoose = require('mongoose');
@@ -40,7 +40,7 @@ app.use('/', index);
 app.use('/api', users);
 app.use('/api', Device);
 app.use('/api', company);
-app.use('/api', mqttRouter);
+app.use('/api', mobiusManager);
 app.use('/api', product);
 
 // catch 404 and forward to error handler
@@ -49,7 +49,6 @@ app.use(function (req, res, next) {
     err.status = 404;
     next(err);
 });
-
 // error handler
 app.use(function (err, req, res, next) {
     // set locals, only providing error in development

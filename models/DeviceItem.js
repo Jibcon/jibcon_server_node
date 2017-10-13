@@ -8,10 +8,10 @@ var schema = mongoose.Schema({
     deviceType : {type : String, requied : true},
     deviceOnOffState : {type : Boolean, required : true},
     subscribeOnOffState : {type : Boolean, required : true},
-    roomName : {type : String},
-    aeName : {type : String},
-    cntName : {type : String},
-    content : {type : String},
+    roomName : {type : String,default:""},
+    aeName : {type : String,default:""},
+    cntName : {type : String,default:""},
+    content : {type : String,default:""},
 
 
 });
