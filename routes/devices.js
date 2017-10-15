@@ -4,12 +4,26 @@ var User = require('../models/user');
 var DeviceItem = require('../models/DeviceItem');
 var waterfall = require('async-waterfall');
 var MobiusManager = require('./MobiusManager');
+
+//kill code never use ONLY FOR DEBUG
+router.delete('/removeAllDevices', (req,res)=>{
+    DeviceItem.remove({},(err, result)=>{
+        if(err) {
+            console.log("removeAllDevices err");
+
+        }
+        res.status(201).end();
+    });
+});
+
 router.get('/devices', (req, res) => {
 
-    var userToken = req.headers.authorization.substr(6, 1);
+    //var userToken = req.headers.authorization.substr(6, 0);
     //Token 1
+    var userToken = req.headers.authorization.slice(6);
+
     console.log(userToken);
-    DeviceItem.find({user: userToken}, (err, devices) => {
+    DeviceItem.find({user_id: userToken}, (err, devices) => {
 
         if (err) res.status(500).end();
         else {
@@ -20,12 +34,14 @@ router.get('/devices', (req, res) => {
     });
 });
 
+
 router.put('/devices/:id', (req, res) => {
     console.log('put devices');
+    console.log(req.body);
     var userToken = req.headers.authorization.substr(6);
     DeviceItem.findById(req.params.id, (err, device) => {
         //device = req.body;
-        device.user = req.body.user;
+        device.user_id = req.body.user_id;
         device.deviceCom = req.body.deviceCom;
         device.deviceType = req.body.deviceType;
         device.deviceOnOffState = req.body.deviceOnOffState;
@@ -53,14 +69,14 @@ router.get('/alldevices', (req, res) => {
 });
 
 router.delete('/deleteDevice/:id', (req, res) => {
-    var userToken = req.headers.authorization.substr(6, 1);
+    var userToken = req.headers.authorization.slice(6);
     //Token 1
     console.log(userToken);
-    DeviceItem.remove({$and: [{user: userToken}, {_id: req.params.id}]}, (err, output) => {
-        if(err) res.status(501).end();
-        else{
+    DeviceItem.remove({$and: [{user_id: userToken}, {_id: req.params.id}]}, (err, output) => {
+        if (err) res.status(501).end();
+        else {
             res.status(201).json({
-                success:true
+                success: true
             });
         }
     });
@@ -69,12 +85,16 @@ router.delete('/deleteDevice/:id', (req, res) => {
 
 router.post('/devices', (req, res) => {
 
-    if (req.body === null) res.status(500).end();
+    console.log(req.headers);
+    console.log(req.body);
 
-    var userToken = req.headers.authorization.substr(6, 1);
+    if (req.body === null) res.status(404).end();
+
+    var userToken = req.headers.authorization.slice(6);
+
     console.log(userToken);
     var newDevice = new DeviceItem({
-        user: userToken,
+        user_id: userToken,
         //user를 Token으로 검색하고 _id로 검색후 저장
         deviceCom: req.body.deviceCom,
         deviceName: req.body.deviceName,
@@ -89,14 +109,10 @@ router.post('/devices', (req, res) => {
 
     newDevice.save((err) => {
         if (err) throw err;
-
-
         res.status(200).json({
             success: true
         })
     });
-
-
 });
 
 

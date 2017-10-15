@@ -10,7 +10,9 @@ var users = require('./routes/users');
 var company = require('./routes/companies');
 var product = require('./routes/products');
 var Device = require('./routes/devices');
-var mobiusManager = require('./routes/MobiusManager');
+var sub = require('./routes/sub');
+var cnt = require('./routes/cnt');
+//var mobiusManager = require('./routes/MobiusManager');
 var app = express();
 
 var mongoose = require('mongoose');
@@ -40,8 +42,9 @@ app.use('/', index);
 app.use('/api', users);
 app.use('/api', Device);
 app.use('/api', company);
-app.use('/api', mobiusManager);
 app.use('/api', product);
+app.use('/api', sub);
+app.use('/api', cnt);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
