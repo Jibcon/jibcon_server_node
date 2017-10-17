@@ -58,7 +58,7 @@ function mqttAddSubscription(subscribtionTopic, receiver) {
     //mqtt topic 설정
     var mqttClient = mqtt.connect(mqttUrl);
     mqttClient.on('connect', () => {
-        console.log(subscribtionTopic);
+        //console.log(subscribtionTopic);
         mqttClient.subscribe(subscribtionTopic);
         console.log('connect to ' + subscribtionTopic);
     });
@@ -114,7 +114,7 @@ router.post('/addSub', (req, res) => {
     var option = JSON.parse(JSON.stringify(httpRequestOptions));
     var subData = JSON.parse(JSON.stringify(subscriptionData));
 
-    option.path = httpRequestOptions.path + '/' + req.body.aeName + '/' + req.body.cntName;
+    option.path = httpRequestOptions.path + '/' + req.body.aeName + '/' + req.body.cntName+"_res";
     subData[`m2m:sub`].rn = req.body.subName;
     subData[`m2m:sub`].nu = [mqttUrl + '/' + req.body.subName];
 

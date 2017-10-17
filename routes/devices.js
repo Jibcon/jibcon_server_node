@@ -38,9 +38,19 @@ router.get('/devices', (req, res) => {
 router.put('/devices/:id', (req, res) => {
     console.log('put devices');
     console.log(req.body);
-    var userToken = req.headers.authorization.substr(6);
-    DeviceItem.findById(req.params.id, (err, device) => {
+    console.log('params : ' +
+        req.body._id);
+   // var userToken = req.headers.authorization.splice(6);
+    //console.log('userToken : ' + userToken);
+    DeviceItem.findOne({_id : req.body._id}, (err, device) => {
         //device = req.body;
+        if(err){
+            console.log('error');
+            throw err;
+            res.status(403).end();
+        }
+        console.log('device : '+device.toString());
+        console.log("pass");
         device.user_id = req.body.user_id;
         device.deviceCom = req.body.deviceCom;
         device.deviceType = req.body.deviceType;
@@ -50,6 +60,8 @@ router.put('/devices/:id', (req, res) => {
         device.cntName = req.body.cntName;
         device.content = req.body.contnet;
         device.aeName = req.body.aeName;
+
+
         device.save((err) => {
             if (err) res.status(500).end();
             else
@@ -59,7 +71,8 @@ router.put('/devices/:id', (req, res) => {
         });
 
 
-    });
+   });
+    //res.status(403).end();
 });
 
 router.get('/alldevices', (req, res) => {
