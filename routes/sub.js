@@ -56,6 +56,8 @@ const httpRequestOptions = {
 
 function mqttAddSubscription(subscribtionTopic, receiver) {
     //mqtt topic 설정
+    var push = JSON.parse(JSON.stringify(pushMessage));
+
     var mqttClient = mqtt.connect(mqttUrl);
     mqttClient.on('connect', () => {
         //console.log(subscribtionTopic);
@@ -71,15 +73,16 @@ function mqttAddSubscription(subscribtionTopic, receiver) {
 
                 m2m = m2m[`m2m:cin`];
                 console.log(m2m.con);
-                pushMessage.to = receiver;
-                pushMessage.notification.body = m2m.con;
-                fcmMessageSending(pushMessage);
+                push.to = receiver;
+                push.notification.body = m2m.con;
+                fcmMessageSending(push);
             }
         }
 
     });
 
 }
+
 //
 // function promiseFunc(a, b) {
 //     return new Promise((resolve, reject) => {
@@ -114,7 +117,7 @@ router.post('/addSub', (req, res) => {
     var option = JSON.parse(JSON.stringify(httpRequestOptions));
     var subData = JSON.parse(JSON.stringify(subscriptionData));
 
-    option.path = httpRequestOptions.path + '/' + req.body.aeName + '/' + req.body.cntName+"_res";
+    option.path = httpRequestOptions.path + '/' + req.body.aeName + '/' + req.body.cntName + "_res";
     subData[`m2m:sub`].rn = req.body.subName;
     subData[`m2m:sub`].nu = [mqttUrl + '/' + req.body.subName];
 

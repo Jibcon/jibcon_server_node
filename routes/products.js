@@ -2,8 +2,8 @@ var express = require('express');
 var router = express.Router();
 var Company = require('../models/company');
 var Product = require('../models/product');
-
-
+////////////////
+/////////////
 //모든 기기 검색
 router.get('/products', function (req, res) {
     Product.find({}, (err, products) => {
@@ -14,7 +14,7 @@ router.get('/products', function (req, res) {
         }
     });
 });
-
+///////////////
 
 /*
 company id로 해당 회사의 모든 기기 검색

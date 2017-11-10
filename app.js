@@ -1,27 +1,29 @@
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+let express = require('express');
+let path = require('path');
+let favicon = require('serve-favicon');
+let logger = require('morgan');
+let cookieParser = require('cookie-parser');
+let bodyParser = require('body-parser');
 
-var index = require('./routes/index');
-var users = require('./routes/users');
-var company = require('./routes/companies');
-var product = require('./routes/products');
-var Device = require('./routes/devices');
-var sub = require('./routes/sub');
-var cnt = require('./routes/cnt');
-//var mobiusManager = require('./routes/MobiusManager');
-var app = express();
+let index = require('./routes/index');
+let users = require('./routes/users');
+let company = require('./routes/companies');
+let product = require('./routes/products');
+let Device = require('./routes/devices');
+let sub = require('./routes/sub');
+let cnt = require('./routes/cnt');
+let timer = require('./routes/timer');
+let weather = require('./routes/weather');
+//let mobiusManager = require('./routes/MobiusManager');
+let app = express();
 
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 
 mongoose.connect('mongodb://localhost/mongodb', {
     useMongoClient: true
     /* other options */
 });
-var db = mongoose.connection;
+let db = mongoose.connection;
 db.on('error', console.error);
 db.once('open', function () {
     console.log('connected to mongodb server');
@@ -45,10 +47,11 @@ app.use('/api', company);
 app.use('/api', product);
 app.use('/api', sub);
 app.use('/api', cnt);
-
+app.use('/api/timer',timer);
+app.use('/api/weather',weather);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-    var err = new Error('Not Found');
+    let err = new Error('Not Found');
     err.status = 404;
     next(err);
 });
