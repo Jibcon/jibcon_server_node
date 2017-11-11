@@ -225,7 +225,7 @@ router.get('/samples/sign_in', function (req, res) {
 });
 
 
-router.get('/allusers', function (req, res) {
+router.get('/allUsers', function (req, res) {
     User.find((err, users) => {
         if (err) res.status(500);
         else
