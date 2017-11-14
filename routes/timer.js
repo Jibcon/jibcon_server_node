@@ -179,14 +179,74 @@ router.post('/addTask', (req, res) => {
 });
 
 router.put('/updateTask', (req, res) => {
+    Task.findOne({_id: req.body._id}, (err, task) => {
+        if (err) {
+            console.log("update Task err");
+            throw err;
 
+        }
+        if (task === null) {
+            console.log("task not found");
+            res.end();
+        }
+        else {
+            console.log(task);
+            task.hour = req.body.hour;
+            task.minute = req.body.minute;
+            task.type = req.body.type;
+            task.data = req.body.data;
+
+            task.save((err, savedTask) => {
+                if (err)
+                    throw err;
+                if (savedTask === undefined) {
+                    res.status(403).end();
+                }
+                else
+                    res.status(201).json(savedTask);
+            });
+
+        }
+    });
 });
 
 router.delete('/deleteTask', (req, res) => {
 
+    Task.findOne({_id : req.body._id},(err, result)=>{
+        if(err)
+            throw err;
+        if(result === null)
+        {
+            console.log("deleteTask task not found");
+            res.end();
+        }
+        else
+        {
+            console.log("result not null");
+            result.remove((err)=>{
+                if(err)
+                    throw err;
+                else
+                    res.status(201).end();
+            });
+        }
+    });
+
 });
 router.post('/getMyTasks', (req, res) => {
+    Task.find({userId: req.body.userId}, (err, tasks) => {
+        if (err)
+            throw err;
+        if (tasks.length === 0) {
+            console.log("task not found");
+            res.end();
+        }
+        else {
 
+            res.json(tasks);
+        }
+
+    });
 });
 
 /////////////DEBUG code
@@ -255,7 +315,7 @@ function timeController() {
                     let length = tasks.length;
 
                     for (let i = 0; i < length; i++) {
-                        console.log(i+'번째 태스크');
+                        console.log(i + '번째 태스크');
                         console.log(tasks[i]);
                         switch (tasks[i].task_type) {
                             case 'message' :
