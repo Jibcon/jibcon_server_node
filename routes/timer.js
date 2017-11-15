@@ -234,7 +234,8 @@ router.delete('/deleteTask', (req, res) => {
 
 });
 router.post('/getMyTasks', (req, res) => {
-    Task.find({userId: req.body.userId}, (err, tasks) => {
+    console.log(req);
+    Task.find({userId: req.headers.authorization}, (err, tasks) => {
         if (err)
             throw err;
         if (tasks.length === 0) {
