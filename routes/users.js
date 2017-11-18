@@ -179,7 +179,7 @@ router.post('/samples_sign_up', function (req, res) {
         first_name: req.body.first_name,
         last_name: req.body.last_name,
         token: req.body.token,
-
+        user_id : "sample_user_id",
         userinfo: {
             type: 'sample',
             full_name: req.body.first_name + req.body.last_name,

@@ -42,7 +42,7 @@ function sendMessage(task) {
     let message = JSON.parse(JSON.stringify(pushMessage));
 
     let promise1 = new Promise((resolve, reject) => {
-        User.findOne({_id: task.userId}, (err, user) => {
+        User.findOne({user_id: task.userId}, (err, user) => {
             if (err)
                 throw err;
             if (user === undefined) {
@@ -72,7 +72,7 @@ function sendWeather(task) {
     let message = JSON.parse(JSON.stringify(pushMessage));
 
     let promise1 = new Promise((resolve, reject) => {
-        User.findOne({_id: task.userId}, (err, user) => {
+        User.findOne({user_id: task.userId}, (err, user) => {
             if (err)
                 throw err;
             if (user === undefined) {
@@ -101,7 +101,7 @@ function sendWeather(task) {
                     //console.log(response.data.gweather.current);
 
                     message.to = result[0];
-                    message.notification.body = current[0].temperature.tc;
+                    message.notification.body = '현재 온도는 ' + current[0].temperature.tc + ' 입니다';
                     console.log(message);
                     fcmMessageSending(message);
 
@@ -154,7 +154,7 @@ router.post('/addTask', (req, res) => {
             //태스크 새로 생성
             let newTask = new Task({
                 time_id: timeID[0]._id,
-                task_type: req.body.type,
+                task_type: req.body.task_type,
                 data: req.body.data,
                 userId: req.body.userId
 
@@ -164,8 +164,9 @@ router.post('/addTask', (req, res) => {
                 if (err)
                     throw err;
                 console.log(savedTask);
+
+                res.status(201).end();
             });
-            res.status(201).end();
         }, (err) => {
 
             console.log('task make failed');
@@ -175,7 +176,6 @@ router.post('/addTask', (req, res) => {
         .catch((err) => {
             console.log(err);
         });
-
 });
 
 router.put('/updateTask', (req, res) => {
@@ -212,19 +212,17 @@ router.put('/updateTask', (req, res) => {
 
 router.delete('/deleteTask', (req, res) => {
 
-    Task.findOne({_id : req.body._id},(err, result)=>{
-        if(err)
+    Task.findOne({_id: req.headers.authorization}, (err, result) => {
+        if (err)
             throw err;
-        if(result === null)
-        {
+        if (result === null) {
             console.log("deleteTask task not found");
             res.end();
         }
-        else
-        {
+        else {
             console.log("result not null");
-            result.remove((err)=>{
-                if(err)
+            result.remove((err) => {
+                if (err)
                     throw err;
                 else
                     res.status(201).end();
@@ -234,20 +232,21 @@ router.delete('/deleteTask', (req, res) => {
 
 });
 router.post('/getMyTasks', (req, res) => {
-    console.log(req);
-    Task.find({userId: req.headers.authorization}, (err, tasks) => {
-        if (err)
-            throw err;
-        if (tasks.length === 0) {
-            console.log("task not found");
-            res.end();
-        }
-        else {
 
-            res.json(tasks);
-        }
+    Task.find({userId: req.headers.authorization})
+        .populate('time_id')
+        .exec((err, tasks) => {
+            if (err)
+                throw err;
+            if (tasks.length === 0) {
+                console.log("task not found");
+                res.end();
+            }
+            else {
+                res.json(tasks);
+            }
 
-    });
+        });
 });
 
 /////////////DEBUG code
@@ -260,11 +259,21 @@ router.get('/allTimeDB', (req, res) => {
 });
 
 router.get('/allTasks', (req, res) => {
-    Task.find({}, (err, tasks) => {
-        if (err)
-            throw err;
-        res.status(201).json(tasks);
-    });
+    Task.find()
+        .populate('time_id')
+        .exec((err, tasks) => {
+            if (err)
+                throw err;
+            if (tasks.length === 0) {
+                console.log("task not found");
+                res.end();
+            }
+            else {
+
+                res.json(tasks);
+            }
+
+        });
 });
 
 router.delete('/deleteAllTasks', (req, res) => {
@@ -277,10 +286,21 @@ router.delete('/deleteAllTasks', (req, res) => {
     });
 });
 
+
 function timeController() {
     let currentTime = new Date();
-    let hour = currentTime.getHours() + 9;
+    let hour = (currentTime.getHours() + 9)%24;
     let minute = parseInt(currentTime.getMinutes());
+    if (hour / 10 < 1) {
+        hour = hour.toString();
+        hour = '0' + hour;
+        console.log(hour);
+    }
+    if (minute / 10 <1 ) {
+        minute = minute.toString();
+        minute = '0'+minute;
+    }
+
     let timeStamp = hour + '_' + minute;
     console.log('time Controller' + timeStamp);
     let promise1 = new Promise((resolve, reject) => {
@@ -291,7 +311,7 @@ function timeController() {
         timeDB.findOne({time: timeStamp}, (err, time_id) => {
             if (err)
                 throw err;
-            if (time_id == undefined) {
+            if (time_id === null) {
                 reject('time_id not found');
             }
             else {
@@ -307,7 +327,7 @@ function timeController() {
             Task.find({time_id: time_id[0]}, (err, tasks) => {
                 if (err)
                     throw err;
-                if (tasks.length == 0) {
+                if (tasks.length === 0) {
                     console.log('task not found');
                 }
                 else {
