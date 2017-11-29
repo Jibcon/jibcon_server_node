@@ -1,11 +1,11 @@
-var express = require('express');
-var router = express.Router();
-var waterfall = require('async-waterfall');
-var User = require('../models/user');
-var https = require('https');
-var async = require('async');
+let express = require('express');
+let router = express.Router();
+let waterfall = require('async-waterfall');
+let User = require('../models/user');
+let https = require('https');
+let async = require('async');
 
-var rand_token = require('rand-token');
+let rand_token = require('rand-token');
 
 const httpRequestOptions = {
     hostname: '',
@@ -18,7 +18,7 @@ const httpRequestOptions = {
         'X-M2M-Origin': 'aei-jibcon',
         'Content-Type': 'application/json;ty=23'
     }
-}
+};
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
@@ -27,23 +27,23 @@ router.get('/', function (req, res, next) {
 
 
 function facebookLogin(access_token, res) {
-    var path = 'https://graph.facebook.com/me?access_token=' + access_token;
+    let path = 'https://graph.facebook.com/me?access_token=' + access_token;
     //console.log('path : ', path);
     https.get(path, (response) => {
         response.on('data', (d) => {
-            var json = JSON.parse(d);
+            let json = JSON.parse(d);
             User.findOne({user_id: json.id}, (err, user) => {
-                var foundUser;
+                let foundUser;
                 if (err) res.status(400).end();
-                if (user == null) {
+                if (user === null) {
                     //signup
-                    var path = `https://graph.facebook.com/${json.id}/?access_token=${access_token}&fields=email,picture,first_name,last_name`;
+                    let path = `https://graph.facebook.com/${json.id}/?access_token=${access_token}&fields=email,picture,first_name,last_name`;
                     https.get(path, (response) => {
                         response.on('data', (d) => {
-                            var json = JSON.parse(d);
-                            var generated_token = rand_token.generate(48);
+                            let json = JSON.parse(d);
+                            let generated_token = rand_token.generate(48);
                             console.log('graph api data : ', json);
-                            var newUser = new User({
+                            let newUser = new User({
                                 email: json.email,
                                 first_name: json.first_name,
                                 last_name: json.last_name,
@@ -93,7 +93,7 @@ function samplelogin(access_token, res) {
 }
 
 function kakaoLogin(access_token, res) {
-    var httpRequestOptions = {
+    let httpRequestOptions = {
         host: 'kapi.kakao.com',
         port: '',
         path: '/v1/user/me',
@@ -105,15 +105,15 @@ function kakaoLogin(access_token, res) {
     };
     httpRequestOptions.headers.Authorization += access_token;
     console.log(httpRequestOptions.headers.Authorization);
-    var httpReq = https.request(httpRequestOptions, (response) => {
+    let httpReq = https.request(httpRequestOptions, (response) => {
         response.on('data', (d) => {
-            var foundUser;
-            var json = JSON.parse(d);
-            var generated_token = rand_token.generate(48);
+            let foundUser;
+            let json = JSON.parse(d);
+            let generated_token = rand_token.generate(48);
             User.findOne({user_id: json.id}, (err, user) => {
                 if (err) res.status(500).end();
-                else if (user == null) {
-                    var newUser = new User({
+                else if (user === null) {
+                    let newUser = new User({
                         //fcm_token: '',
                         email: json.kaccount_email,
                         pic_url: json.properties.thumbnail_image,
@@ -156,18 +156,18 @@ function kakaoLogin(access_token, res) {
 }
 
 router.post('/social_sign_up_or_in', (req, res) => {
-    var access_token = req.body.token;
-    var type = req.body.type;
+    let access_token = req.body.token;
+    let type = req.body.type;
     console.log('token : ', access_token);
     console.log('type : ', type);
 
-    if (type == 'facebook') {
+    if (type === 'facebook') {
 
         facebookLogin(access_token, res);
-    } else if (type == 'kakao') {
+    } else if (type === 'kakao') {
         kakaoLogin(access_token, res);
 
-    } else if (type == 'naver') {
+    } else if (type === 'naver') {
 
     }
 });
@@ -191,8 +191,8 @@ router.post('/samples_sign_up', function (req, res) {
     });
     newUser.save((err, output) => {
         if (err) {
+            res.status(403).end();
             throw err;
-            res.status(500).end();
         }
         res.status(200).json({
             output
@@ -201,9 +201,9 @@ router.post('/samples_sign_up', function (req, res) {
 });
 
 router.get('/samples/sign_in', function (req, res) {
-    var max = 1;
-    var min = 1;
-    var rand = Math.floor(Math.random() * (max - min + 1)) + min;
+    let max = 1;
+    let min = 1;
+    let rand = Math.floor(Math.random() * (max - min + 1)) + min;
     console.log(rand);
 
     User.findOne({token: rand}, (err, user) => {
