@@ -32,7 +32,7 @@ function facebookLogin(access_token, res) {
     https.get(path, (response) => {
         response.on('data', (d) => {
             let json = JSON.parse(d);
-            User.findOne({user_id: json.id}, (err, user) => {
+            User.findOne({social_id: json.id}, (err, user) => {
                 let foundUser;
                 if (err) res.status(400).end();
                 if (user === null) {
@@ -49,7 +49,7 @@ function facebookLogin(access_token, res) {
                                 last_name: json.last_name,
                                 pic_url: json.picture.data.url,
                                 token: generated_token,
-                                user_id: json.id,
+                                social_id: json.id,
                                 userinfo: {
                                     type: 'facebook',
                                     full_name: json.first_name + json.last_name,
@@ -88,7 +88,6 @@ function samplelogin(access_token, res) {
         if (err) {
             throw err;
         }
-
     });
 }
 
@@ -110,7 +109,7 @@ function kakaoLogin(access_token, res) {
             let foundUser;
             let json = JSON.parse(d);
             let generated_token = rand_token.generate(48);
-            User.findOne({user_id: json.id}, (err, user) => {
+            User.findOne({social_id: json.id}, (err, user) => {
                 if (err) res.status(500).end();
                 else if (user === null) {
                     let newUser = new User({
@@ -118,7 +117,7 @@ function kakaoLogin(access_token, res) {
                         email: json.kaccount_email,
                         pic_url: json.properties.thumbnail_image,
                         token: generated_token,
-                        user_id: json.id,
+                        social_id: json.id,
                         userinfo: {
                             type: 'kakao',
                             full_name: json.properties.nickname,
@@ -226,11 +225,18 @@ router.get('/samples/sign_in', function (req, res) {
 
 
 router.get('/allUsers', function (req, res) {
-    User.find((err, users) => {
-        if (err) res.status(500);
-        else
-            res.json(users);
-    });
+    // User.find((err, users) => {
+    //     if (err) res.status(500);
+    //     else
+    //         res.json(users);
+    // });
+    User.find({})
+        .populate('currentHouse')
+        .exec((err,users)=>{
+        if(err)
+            throw err;
+        res.status(201).json(users);
+        });
 });
 
 //다른 기기로 로그인 할 경우 현재 기기의 fcm 토큰으로 업데이트
