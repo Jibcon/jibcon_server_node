@@ -324,7 +324,7 @@ router.post('/addDevice', (req, res) => {
 
     console.log('house_id' + req.headers.authorization);
     let promise1 = new Promise((resolve, reject) => {
-        House.findOne({_id: req.body.house_id}, (err, house) => {
+        House.findOne({_id: req.headers.authorization}, (err, house) => {
             if (err)
                 throw err;
             if (house === null) {
