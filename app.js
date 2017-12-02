@@ -14,6 +14,7 @@ let sub = require('./routes/sub');
 let cnt = require('./routes/cnt');
 let timer = require('./routes/timer');
 let house = require('./routes/house');
+let invitation = require('./routes/invitation');
 //let mobiusManager = require('./routes/MobiusManager');
 let app = express();
 
@@ -49,6 +50,7 @@ app.use('/api', sub);
 app.use('/api', cnt);
 app.use('/api/house',house);
 app.use('/api/timer',timer);
+app.use('/api/invitation',invitation);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     let err = new Error('Not Found');
